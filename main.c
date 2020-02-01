@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
 
 #include "keyboardHelper.h"
 
@@ -15,13 +16,23 @@ struct visualDirectory {
 	char *itemTypes;
 };
 
+int isNavigationDirectory(const char *d_name){
+	// TODO: make this better.
+	if (strcmp(d_name,".")==0 || strcmp(d_name,"..")==0){
+		return 1;
+	}
+	else {
+		return 0;
+	}
+}
 int getDirectoryItemCount(const char *dirPath){
 	DIR *directory = opendir(dirPath);
+	struct dirent *dEntries;
 	if (directory == NULL){
 		return -1;
 	}
 	int nItems = 0;
-	while (readdir(directory)){
+	while ((dEntries = readdir(directory))){
 		nItems++;
 	}
 	closedir(directory);
@@ -55,9 +66,18 @@ struct visualDirectory *getDirectoryEntries(const char *dirPath){
 	struct visualDirectory *visDir = newVisualDirectory(dirPath);
 	int index = 0;
 	if (directory != NULL){
-		while (dEntries = readdir(directory)){
+		while ((dEntries = readdir(directory))){
 			strncpy(visDir->itemNames[index],dEntries->d_name,FILENAME_LEN);
-			visDir->itemTypes[index] = dEntries->d_type;
+			DIR *tempDir;
+			char *tempDirPath = calloc(1,1024);
+			strcat(tempDirPath,dirPath);
+			strcat(tempDirPath,"/");
+			strcat(tempDirPath,dEntries->d_name);
+			printf("\n%s\n",tempDirPath);
+			visDir->itemTypes[index] = (tempDir = opendir(tempDirPath)) ? 'd' : 'f';
+			if (tempDir != NULL){
+				closedir(tempDir);
+			}
 			
 			index++;
 		}
@@ -71,12 +91,26 @@ struct visualDirectory *getDirectoryEntries(const char *dirPath){
 
 void displayDirectory(struct visualDirectory *visDir, int filenameMaxLength, int nColumns){
 	int index = 0;
+	printf("\n");
 	for (int i=0; i<visDir->nItems/nColumns; i++){
-		for (int j=0; j<nColumns; j++){
+		for (int j=0; j<nColumns;){
 			if (index < visDir->nItems){
-				//print formatted
+				if (!isNavigationDirectory(visDir->itemNames[index])){
+					//print formatted
+					printf("%s:%c; ",visDir->itemNames[index], visDir->itemTypes[index]);
+					j++;
+				}
+				else {
+					
+				}
+				index++;
+			} 
+			else {
+				return;
 			}
+
 		}
+		printf("\n");
 	}
 
 }
@@ -90,18 +124,20 @@ void displayDirectory(struct visualDirectory *visDir, int filenameMaxLength, int
 int main(int nStartOptions, char **startOptions){
 	char *startDirectory = calloc(sizeof(char),1024);
 	for (int i=0; i<nStartOptions; i++){
-		printf("\n%s\n",startOptions[i]);
+		//printf("\n%s\n",startOptions[i]);
 	}
 	if (nStartOptions > 1){
 		strcpy(startDirectory,startOptions[1]);
 	}
 	else {
-		strcpy(startDirectory,"/");
+		getcwd(startDirectory,1024);
 	}
-	struct visualDirectory *test = getDirectoryEntries(startDirectory);
-	for (int i=0; i<test->nItems; i++){
-		printf("%s\n",test->itemNames[i]);
+	struct visualDirectory *visDir = getDirectoryEntries(startDirectory);
+	for (int i=0; i<visDir->nItems; i++){
+		//printf("%s\n",visDir->itemNames[i]);
 	}
+
+	displayDirectory(visDir,256,1);
 	return 0;
 }
 
