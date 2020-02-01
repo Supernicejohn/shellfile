@@ -6,7 +6,7 @@ Same level of detail as standard 'ls'
 Easily read formatting
 Color coding
 Keyboard file navigation
-# It is not ls
+# It is not 'ls'
 Shellfile will be a program that not only outputs to the terminal,
 but also runs with user input. (arrow keys, command interpreter, et.c.)
 In contrast to running ls, Shellfile might not leave usable info on screen,
