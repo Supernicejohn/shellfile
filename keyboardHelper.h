@@ -62,7 +62,7 @@ int getSpecialKey(char ScanIn){
 			case 51: return KEYS_DELETE; break; 
 			default: return KEYS_NOKEY; break;
 		}
-	} else if (ScanIn == 27 && buffer[0] == 255){
+	} else if (ScanIn == 27 && buffer[0] == -128){
 		return KEYS_ESCAPE;
 	} else if (ScanIn == 10){
 		return KEYS_ENTER;
