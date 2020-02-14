@@ -11,6 +11,13 @@
 #define TERMCOL_MAGENTA 5
 #define TERMCOL_CYAN 6
 #define TERMCOL_WHITE 7 // yeah ok "white" is just gray it seems like
+#define TERMCOL_DEFAULT 9
+
+#define TERMTEXT_NORMAL 0
+#define TERMTEXT_BOLD 1
+#define TERMTEXT_ITALIC 3
+#define TERMTEXT_UNDERLINE 4
+#define TERMTEXT_INVERT 7
 //modified from answer by user John T on Stack Overflow (https://stackoverflow.com/questions/1022957/getting-terminal-width-in-c)
 int getTerminalWidth(){
 	struct winsize window;
@@ -27,21 +34,40 @@ void setCursorPosition(int x, int y){
 	printf("\033[%d;%dH",y,x);
 }
 
-void setColor(int backgroundColor, int textColor){
-	printf("\033[%d;%dm",30+textColor,40+backgroundColor);
+void applyTerminalSettings(struct terminalSettings *ts){
+	printf("\033[%d;%d;%dm",30+ts->textColor,40+ts->backgroundColor,ts->textModifiers);
+
+}
+void setTextColor(struct terminalSettings *ts, int color){
+	ts->textColor = color;
+}
+void setBackgroundColor(struct terminalSettings *ts, int color){
+	ts->backgroundColor = color;
+}
+void setTextType(struct terminalSettings *ts, int flags){
+	ts->textModifiers = flags;
 }
 
 void drawBox(struct viewArea *vArea){
 	//printf("\033[94;100m");
-	setColor(TERMCOL_BLACK,TERMCOL_WHITE);
-	for (int i=vArea->x; i<vArea->x+vArea->w; i++){
+	struct terminalSettings ts;
+	setTextColor(&ts,TERMCOL_BLACK);
+	setBackgroundColor(&ts,TERMCOL_WHITE);
+	applyTerminalSettings(&ts);
+	for (int i=0; i<2; i++){
+		for (int j=0; j<2; j++){
+			setCursorPosition(vArea->x+(vArea->w-1)*i,vArea->y+(vArea->h-1)*j);
+			printf("+");
+		}
+	}
+	for (int i=vArea->x+1; i<vArea->x+vArea->w-1; i++){
 		// set top and bottom pixels background color
 		setCursorPosition(i,vArea->y);
 		printf("-");
 		setCursorPosition(i,vArea->y+vArea->h-1);
 		printf("-");
 	}
-	for (int i=vArea->y+1; i<vArea->y+vArea->h; i++){
+	for (int i=vArea->y+1; i<vArea->y+vArea->h-1; i++){
 		// set left and right pixels background color
 		setCursorPosition(vArea->x,i);
 		printf("|");
@@ -50,7 +76,10 @@ void drawBox(struct viewArea *vArea){
 	}
 }
 void clear(struct viewArea *vArea){
-	setColor(TERMCOL_BLACK,TERMCOL_GREEN);
+	struct terminalSettings ts;
+	setTextColor(&ts,TERMCOL_BLACK);
+	setBackgroundColor(&ts,TERMCOL_GREEN);
+	applyTerminalSettings(&ts);
 	for (int j=vArea->y; j<vArea->h; j++){
 		char *line = calloc(sizeof(char),vArea->w);
 		memset(line,' ',vArea->w-1);

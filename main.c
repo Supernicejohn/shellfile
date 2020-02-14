@@ -2,30 +2,47 @@
 void drawDirectory(struct directoryHierarchy *dirHier, int depth, struct viewArea *vArea){
 	for (int i=0; i<dirHier->visDirs[depth]->nItems; i++){
 		char *line = calloc(sizeof(char),vArea->w);
+		struct terminalSettings ts;
+		setBackgroundColor(&ts,TERMCOL_DEFAULT);
+		setTextColor(&ts,TERMCOL_WHITE);
+		setTextType(&ts,TERMTEXT_NORMAL);
+		if (dirHier->visDirs[depth]->itemTypes[i]=='d'){
+			setBackgroundColor(&ts,TERMCOL_CYAN);
+			setTextType(&ts,TERMTEXT_ITALIC);
+		}
+		if (isNavigationDirectory(dirHier->visDirs[depth]->itemNames[i])){
+			setBackgroundColor(&ts,TERMCOL_MAGENTA);
+		}
 		if (dirHier->selectedIndexPath[depth] == i){
-			setColor(TERMCOL_RED,TERMCOL_BLACK);
+			setTextColor(&ts,TERMCOL_RED);
+			setTextType(&ts,TERMTEXT_BOLD);
 		}
-		else if (isNavigationDirectory(dirHier->visDirs[depth]->itemNames[i])){
-			setColor(TERMCOL_MAGENTA,TERMCOL_BLACK);
-		}
-		else if (dirHier->visDirs[depth]->itemTypes[i]=='d'){
-			setColor(TERMCOL_CYAN,TERMCOL_BLACK);
-		}
-		else {
-			setColor(TERMCOL_WHITE,TERMCOL_BLACK);
-		}
+
+		applyTerminalSettings(&ts);
 		strncpy(line,(dirHier->visDirs[depth])->itemNames[i],vArea->w);
 		//setCursorPosition(vArea->x,vArea->y+i);
 		//printf("%s",line);
 		printFullWidth(newViewArea(vArea->x,vArea->y+i,vArea->w,vArea->h),line);
-		printf("\033[39;49m");
+		//printf("\033[0;0m");
+		free(line);
+		setBackgroundColor(&ts,TERMCOL_DEFAULT);
+		setTextColor(&ts,TERMCOL_DEFAULT);
+		setTextType(&ts,TERMTEXT_NORMAL);
+		applyTerminalSettings(&ts);
 	}
 }
 void drawAll(struct directoryHierarchy *dirHier){
 	int screenW = getTerminalWidth();
 	int nAreas = dirHier->depth;
-	int areaWidth = screenW / nAreas;
-	struct viewArea *vArea = newViewArea(1,1,areaWidth,getTerminalHeight());
+	int areaWidth = (screenW-1) / nAreas + 1;
+	int maxHeight = 0;
+	for (int i=0; i<dirHier->depth; i++){
+		if (dirHier->visDirs[i]->nItems > maxHeight){
+			maxHeight = dirHier->visDirs[i]->nItems+2;
+		}
+	}
+	struct viewArea *vArea = newViewArea(1,1,areaWidth,maxHeight);
+	clear(newViewArea(1,1,screenW,getTerminalHeight()));
 	for (int i=0; i<nAreas; i++){
 		drawBox(vArea);
 		drawDirectory(dirHier,i,newViewArea(vArea->x+1,vArea->y+1,vArea->w-2,vArea->h-2));	
@@ -50,40 +67,24 @@ int main(int nStartOptions, char **startOptions){
 	
 
 	struct visualDirectory *visDir = getDirectoryEntries(startDirectory);	
-//	struct visualDirectory *visDir2 = getDirectoryEntries(strcat(startDirectory,"/Documents"));	
-//	struct visualDirectory *visDir3 = getDirectoryEntries(strcat(startDirectory,"/C"));
-//	struct visualDirectory *visDir4 = getDirectoryEntries(strcat(startDirectory,"/shf"));
 	struct directoryHierarchy *dirHier = calloc(sizeof(struct directoryHierarchy),1);
 	dirHier->selectedIndexPath[0] = 0;
-//	dirHier->selectedIndexPath[1] = 7;
-//	dirHier->selectedIndexPath[2] = 3;
 	
 	
 	dirHier->depth = 1;
 	dirHier->visDirs[0] = visDir;
-//	dirHier->visDirs[1] = visDir2;
-//	dirHier->visDirs[2] = visDir3;
-//	dirHier->visDirs[3] = visDir4;
-
 	dirHier->selectedDepth = 0;
 
-//	for (int i=0; i<visDir->nItems; i++){
-		//printf("%s\n",visDir->itemNames[i]);
-//	}
 	struct viewArea *vArea = newViewArea(0,0,30,30);
-	//tempFindFirst(dirHier,startDirectory);
 	drawAll(dirHier);
-	//drawBox(vArea);
-	//displayDirectory(visDir,256,1);
 	while (1){
-		clear(newViewArea(0,0,getTerminalWidth(),getTerminalHeight()));
 		drawAll(dirHier);
 		doNavigation(dirHier);
 		
 
 	}
-	setCursorPosition(0,31);
-	printf("\033[39;49m");
+	setCursorPosition(0,0);
+	printf("\033[0;0m");
 	return 0;
 }
 

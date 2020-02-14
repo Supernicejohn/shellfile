@@ -33,6 +33,7 @@ void doNavigation(struct directoryHierarchy *dirHier){
 	//while (getMovementKey() != KEYS_NOKEY){
 		// loop
 	//}
+	int a;
 	switch(movement){
 		case 'k':
 			if (dirHier->selectedIndexPath[currentDepth]>0)
@@ -50,11 +51,49 @@ void doNavigation(struct directoryHierarchy *dirHier){
 			}
 			break;
 		case 'l':
-			if (getItemType(dirHier) == 'd'){
+			if (getItemType(dirHier) == 'd' && currentDepth < 99){
 				currentDepth++;
 				dirHier->selectedIndexPath[currentDepth] = 0;
 				
 			}
+			break;
+		case 'r':
+			while(strcmp(dirHier->visDirs[0]->absolutePath,"/")!=0){
+				printf("%s\n",dirHier->visDirs[0]->absolutePath);
+				shiftDirectoryHierarchy(dirHier,1);
+				char *path = calloc(sizeof(char),1000);
+				strcpy(path,dirHier->visDirs[1]->absolutePath);
+				printf("\n\n%s\n\n",path);
+				for (int i=strlen(path)-1; i>=0; i--){
+					if (path[i-1]=='/'){
+						path[i] = 0;
+						break;
+					}
+					path[i] = 0;
+				}
+				dirHier->visDirs[0] = getDirectoryEntries(path);
+				free(path);
+				buildIndexPath(dirHier);
+			}
+			break;	
+		case 't':
+			buildIndexPath(dirHier);
+			break;
+		case 'g':
+			gotoCurrentDirectory(dirHier);
+			currentDepth = dirHier->selectedDepth;
+			break;
+		case 's':
+			a = setCurrentWorkingDirectory(dirHier);
+			setCursorPosition(1,1);
+			printf("%d %s",a,dirHier->visDirs[currentDepth]->absolutePath);
+			exit(0);
+			break;
+		case 'q':
+			printf("\033[0;0m");
+			clear(newViewArea(0,0,getTerminalWidth(),getTerminalHeight()));
+			setCursorPosition(1,1);
+			exit(0);
 			break;
 	}
 
