@@ -1,7 +1,7 @@
 #include "controls.h"
 #include "structs.h"
-#include "screenHelper.h"
-#include "keyboardHelper.h"
+#include "screen.h"
+#include "keyboard.h"
 #include "visualFileSystem.h"
 void drawDirectory(struct directoryHierarchy *dirHier, int depth, struct viewArea *vArea){
 	for (int i=0; i<dirHier->visDirs[depth]->nItems; i++){
@@ -24,10 +24,7 @@ void drawDirectory(struct directoryHierarchy *dirHier, int depth, struct viewAre
 
 		applyTerminalSettings(&ts);
 		strncpy(line,(dirHier->visDirs[depth])->itemNames[i],vArea->w);
-		//setCursorPosition(vArea->x,vArea->y+i);
-		//printf("%s",line);
 		printFullWidth(newViewArea(vArea->x,vArea->y+i,vArea->w,vArea->h),line);
-		//printf("\033[0;0m");
 		free(line);
 		setBackgroundColor(&ts,TERMCOL_DEFAULT);
 		setTextColor(&ts,TERMCOL_DEFAULT);
@@ -52,7 +49,11 @@ void drawAll(struct directoryHierarchy *dirHier){
 		drawDirectory(dirHier,i,newViewArea(vArea->x+1,vArea->y+1,vArea->w-2,vArea->h-2));	
 		vArea->x += areaWidth-1;
 	}
-
+	vArea->y = maxHeight;
+	vArea->h = 1;
+	vArea->x++;
+	printFullWidth(vArea,"| h-left l-right j-down k-up | q-quit g-setbase |");
+	free(vArea);
 }
 
 
@@ -80,7 +81,6 @@ int main(int nStartOptions, char **startOptions){
 	dirHier->selectedDepth = 0;
 
 	struct viewArea *vArea = newViewArea(0,0,30,30);
-	drawAll(dirHier);
 	while (1){
 		drawAll(dirHier);
 		doNavigation(dirHier);

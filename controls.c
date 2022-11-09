@@ -80,6 +80,9 @@ void doNavigation(struct directoryHierarchy *dirHier){
 			printf("%d %s",a,dirHier->visDirs[currentDepth]->absolutePath);
 			exit(0);
 			break;
+		case 'z':
+			system(dirHier->visDirs[currentDepth]->absolutePath);
+			break;
 		case 'q':
 			printf("\033[0;0m");
 			clear(newViewArea(0,0,getTerminalWidth(),getTerminalHeight()));

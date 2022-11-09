@@ -5,9 +5,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "keyboardHelper.h"
+#include "keyboard.h"
 #include "visualFileSystem.h"
-#include "screenHelper.h"
+#include "screen.h"
 #include "structs.h"
 
 char getItemType(struct directoryHierarchy *);
