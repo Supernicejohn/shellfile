@@ -49,5 +49,9 @@ void clear(struct viewArea *a){
 	}
 }
 void printFullWidth(struct viewArea *a, const char *str){
-	
+	strnlen(str,200);
+	char *buffer[] = calloc(size,sizeof(char);
+	memset(buffer,0,200);
+	strncpy(buffer,str,200);
+	mvprintw(a->y,a->x,str);
 }
